@@ -28,7 +28,7 @@ from typing import Callable, Dict, Any, Awaitable
 # ⚙️ SOZLAMALAR
 # ============================================================
 
-TOKEN = "8638814634:AAHZcih1yGXYCeNnrj2eukgacTrwuuM19G0"
+TOKEN = "8638814634:AAGC6DjZes33T40xn9crUrYe185MKFSPVQU"
 
 OWNER_USERNAME = "@D778s"
 
