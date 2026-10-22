@@ -28,7 +28,7 @@ from typing import Callable, Dict, Any, Awaitable
 # ⚙️ SOZLAMALAR
 # ============================================================
 
-TOKEN = "8638814634:AAGC6DjZes33T40xn9crUrYe185MKFSPVQU"
+TOKEN = "8638814634:AAH83tGvec1wVYGHkAyXhwrGvUzIaGc3U-w"
 
 OWNER_USERNAME = "@D778s"
 
@@ -1101,7 +1101,7 @@ async def change_giveaway_handler(message: Message):
         ]
     )
 
-    await message.answer(
+    sent_msg = await message.answer(
         f"🎲 <b>TASODIFIY ALMAZ SOVG'ASI!</b>\n\n"
         f"👤 Tarqatuvchi: {creator_mention}\n"
         f"💎 Sovg'a miqdori: <b>{total_amount} Almaz</b>\n"
@@ -1111,6 +1111,11 @@ async def change_giveaway_handler(message: Message):
         reply_markup=keyboard,
         parse_mode=ParseMode.HTML,
     )
+
+    try:
+        await message.bot.pin_chat_message(chat_id=message.chat.id, message_id=sent_msg.message_id)
+    except Exception:
+        pass
 
 
 @dp.callback_query(F.data.startswith("join_rnd_"))
@@ -1468,7 +1473,7 @@ async def send_giveaway_handler(message: Message):
         ]
     )
 
-    await message.answer(
+    sent_msg = await message.answer(
         f"🎁 <b>ALMAZ SOVG'ASI!</b>\n\n"
         f"👤 Tarqatuvchi: <b>{html.escape(sender_name)}</b>\n"
         f"💎 Jami: <b>{actual_total} Almaz</b>\n"
@@ -1479,6 +1484,11 @@ async def send_giveaway_handler(message: Message):
         reply_markup=keyboard,
         parse_mode=ParseMode.HTML,
     )
+
+    try:
+        await message.bot.pin_chat_message(chat_id=message.chat.id, message_id=sent_msg.message_id)
+    except Exception:
+        pass
 
 
 @dp.message(F.text.lower().startswith(("mgive", "/mgive")))
@@ -1539,7 +1549,7 @@ async def mgive_giveaway_handler(message: Message):
         ]
     )
 
-    await message.answer(
+    sent_msg = await message.answer(
         f"🎁 <b>DOLLAR SOVG'ASI!</b>\n\n"
         f"👤 Tarqatuvchi: <b>{html.escape(sender_name)}</b>\n"
         f"💵 Jami: <b>{actual_total} dollar</b>\n"
@@ -1550,6 +1560,11 @@ async def mgive_giveaway_handler(message: Message):
         reply_markup=keyboard,
         parse_mode=ParseMode.HTML,
     )
+
+    try:
+        await message.bot.pin_chat_message(chat_id=message.chat.id, message_id=sent_msg.message_id)
+    except Exception:
+        pass
 
 
 @dp.callback_query(F.data.startswith("claim_gw_"))
@@ -1655,7 +1670,7 @@ async def business_handler_direct(message: Message, user_id: int, full_name: str
     )
 
 
-@dp.message(StateFilter("*"), F.text.func(lambda t: "biznes" in clean_text(t)))
+@dp.message(StateFilter("*"), F.text.func(lambda t: t and clean_text(t) in ["biznes", "business"]))
 async def business_handler(message: Message, state: FSMContext):
     await state.clear()
     await business_handler_direct(message, message.from_user.id, message.from_user.full_name)
@@ -1789,7 +1804,7 @@ async def shop_handler_msg(message: Message):
     await message.answer("🛒 <b>O'yin va Asboblar Do'koni</b>\n\nSotib olmoqchi bo'lgan mahsulotingizni tanlang:", reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
 
-@dp.message(StateFilter("*"), F.text.func(lambda t: "dokon" in clean_text(t)))
+@dp.message(StateFilter("*"), F.text.func(lambda t: t and clean_text(t) in ["dokon", "shop", "dokonlar"]))
 async def shop_text_handler(message: Message, state: FSMContext):
     await state.clear()
     await shop_handler_msg(message)
@@ -2029,7 +2044,7 @@ def games_keyboard(owner_id: int = 0):
     )
 
 
-@dp.message(StateFilter("*"), F.text.func(lambda t: "oyinlar" in clean_text(t)))
+@dp.message(StateFilter("*"), F.text.func(lambda t: t and clean_text(t) in ["oyinlar", "oyinlarmenyusi", "games"]))
 async def games_menu_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("🎮 <b>O'YINLAR ZALI</b>\n\nO'yinni tanlang: 👇", reply_markup=games_keyboard(message.from_user.id), parse_mode=ParseMode.HTML)
@@ -2051,7 +2066,7 @@ async def back_to_games_cb(callback: CallbackQuery, state: FSMContext):
 
 
 # ============================================================
-# ❌⭕ HAQIQIY X-O O'YINI (SUNIY INTELEKT/BOT BOSH_KATAKNI O'YNAYDI)
+# ❌⭕ HAQIQIY X-O O'YINI
 # ============================================================
 
 def check_ttt_winner(board):
@@ -2123,12 +2138,10 @@ async def process_tictactoe_move(callback: CallbackQuery, state: FSMContext):
         await callback.answer("Bu katak band!", show_alert=True)
         return
 
-    # User yurishi
     board[idx] = "X"
     winner = check_ttt_winner(board)
 
     if not winner:
-        # Bot yurishi (bo'sh kataklar orasidan tasodifiy tanlaydi)
         empty_indices = [i for i, x in enumerate(board) if x == " "]
         if empty_indices:
             bot_idx = random.choice(empty_indices)
@@ -2286,12 +2299,10 @@ async def execute_game_logic(msg, state: FSMContext, amount: int, user_id: int, 
             db.update(user_id, almaz=value)
 
     if game_type == "casino":
-        # Kazino animatsiyasi uchun Telegramning rasmiy Slot Machine emojisi
         slot_msg = await msg.bot.send_dice(chat_id=msg.chat.id, emoji="🎰")
         val = slot_msg.dice.value
         await asyncio.sleep(2.5)
 
-        # 64 - Uchta bir xil belgi (Jackpot / Yutuq)
         if val in [1, 22, 43, 64]:
             reward, _ = apply_charm_bonus(user_id, amount * 2)
             if user["double_win_count"] > 0:
@@ -2307,9 +2318,8 @@ async def execute_game_logic(msg, state: FSMContext, amount: int, user_id: int, 
         await finish_game_result(msg, state, text, True, f"game_start_casino_{user_id}", user_id)
 
     elif game_type == "ruletka":
-        # Ruletka adolatli sonlar orqali aniqlanadi (1 dan 36 gacha)
         landed_number = random.randint(1, 36)
-        win = (landed_number % 2 == 0) # Juft son tushsa yutadi
+        win = (landed_number % 2 == 0)
 
         if win:
             reward, _ = apply_charm_bonus(user_id, int(amount * 1.5))
@@ -2330,7 +2340,6 @@ async def execute_game_logic(msg, state: FSMContext, amount: int, user_id: int, 
         val = dice_msg.dice.value
         await asyncio.sleep(2.5)
         
-        # Zar natijasi: 4, 5, 6 tushsa yutuq
         win = val >= 4
         if user["lucky_dice_count"] > 0 and not win:
             db.update(user_id, lucky_dice_count=user["lucky_dice_count"] - 1)
@@ -2741,7 +2750,6 @@ async def process_rps_choice(callback: CallbackQuery, state: FSMContext):
     choices = ["tosh", "qogoz", "qaychi"]
     bot_choice = random.choice(choices)
 
-    # Qoidalar boyicha taqqoslash
     if user_choice == bot_choice:
         outcome = "draw"
     elif (user_choice == "tosh" and bot_choice == "qaychi") or \
@@ -2904,7 +2912,7 @@ async def daily_handler_direct(message: Message, user_id: int, full_name: str):
     await message.answer(f"🎁 Kunlik bonus olindi!\n+{DAILY_REWARD} dollar 💵\n+10 ball 🏆")
 
 
-@dp.message(StateFilter("*"), F.text.func(lambda t: "bonus" in clean_text(t)))
+@dp.message(StateFilter("*"), F.text.func(lambda t: t and clean_text(t) in ["bonus", "kunlikbonus"]))
 async def daily_handler(message: Message, state: FSMContext):
     await state.clear()
     await daily_handler_direct(message, message.from_user.id, message.from_user.full_name)
@@ -2923,7 +2931,7 @@ async def top_menu_handler(message: Message):
     await message.answer("🏆 <b>Reyting turini tanlang:</b>", reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
 
-@dp.message(StateFilter("*"), F.text.func(lambda t: "top" in clean_text(t)))
+@dp.message(StateFilter("*"), F.text.func(lambda t: t and clean_text(t) in ["top", "reyting", "topreyting"]))
 async def top_handler(message: Message, state: FSMContext):
     await state.clear()
     await top_menu_handler(message)
